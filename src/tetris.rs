@@ -2,10 +2,11 @@ use termion::raw::IntoRawMode;
 use termion::screen::AlternateScreen;
 use std::io::{Read, Write, stdout};
 use std::{thread};
-use termion::{async_stdin, color};
-use std::time::Duration;
+use termion::{async_stdin, color, clear, cursor};
+use std::time::{Duration, SystemTime};
 
 use crate::tetromino::Tetromino;
+use crate::active_tetromino::ActiveTetromino;
 use crate::traits::*;
 use crate::rotation::Rotation;
 
@@ -31,15 +32,16 @@ pub type Screen = Vec<Vec<String>>;
 
 pub struct Tetris { 
     game: Screen,
+    current_tetromino: ActiveTetromino,
     // board:[[Tetromino;BOARD_SIZE_X];BOARD_SIZE_Y],
     // score: u16,
-    // current_tetromino: Tetromino,
 }
 
 impl Tetris {
     pub fn new() -> Tetris {
         Tetris {
             game: vec![vec![String::from(" "); GAME_SIZE_X]; GAME_SIZE_Y],
+            current_tetromino: ActiveTetromino::new(1, 1)
             // game: [""; GAME_SIZE_X]
         }
     }
@@ -48,6 +50,9 @@ impl Tetris {
         let mut stdout = AlternateScreen::from(stdout().into_raw_mode().unwrap());
         //let mut stdout = stdout().into_raw_mode().unwrap();
         let mut stdin = async_stdin().bytes();
+
+        let mut time_at_last_frame = SystemTime::now();
+        let mut speed_time = 1000;
 
         loop {
             write!(stdout, "{}{}", termion::clear::All, termion::cursor::Hide).unwrap();
@@ -67,7 +72,13 @@ impl Tetris {
             }
 
             self.print_border();
+            // current_tetromino.update();
             self.print(pos_x, pos_y);
+
+            if time_at_last_frame.elapsed().unwrap().as_millis() > speed_time {
+                time_at_last_frame = SystemTime::now();
+                self.update();
+            }
             
             let c = stdin.next();
             write!(stdout, "\r{:?}", c).unwrap();
@@ -79,6 +90,15 @@ impl Tetris {
 
             thread::sleep(Duration::from_millis(100));
         }
+    }
+
+    fn update(&mut self) {
+        self.current_tetromino.update(
+            &mut self.game, 
+            self.current_tetromino.pos_x, 
+            self.current_tetromino.pos_y + 1, 
+            self.current_tetromino.rotation.next()
+        );
     }
 
     fn print_border(&mut self) {
@@ -110,12 +130,24 @@ impl Tetris {
         let mut stdout = stdout().into_raw_mode().unwrap();
         
         for i in 0..GAME_SIZE_Y {
-            write!(stdout, "{}", termion::cursor::Goto(pos_x as u16, (pos_y + i) as u16)).unwrap();
+            write!(stdout, "{}", cursor::Goto(pos_x as u16, (pos_y + i) as u16)).unwrap();
             for j in 0..GAME_SIZE_X {
                 write!(stdout, "{}", self.game[i][j]).unwrap();
             }
         }
 
+        stdout.flush().unwrap();
+    }
+    
+    pub fn log(message: String) {
+        let mut stdout = stdout().into_raw_mode().unwrap();
+        
+        write!(stdout, "{}{}{}", 
+            cursor::Goto(1, GAME_SIZE_Y as u16 + 1),
+            clear::CurrentLine,
+            message
+        ).unwrap();
+        
         stdout.flush().unwrap();
     }
 }
