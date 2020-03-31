@@ -33,8 +33,8 @@ impl Tetromino {
                 if pattern[i][j] == "X" {
                     let mut collide = false;
 
-                    collide |= screen[pos_y + i * BLOCK_SIZE_Y][pos_x + j * BLOCK_SIZE_X] != " ";
-                    collide |= screen[pos_y + i * BLOCK_SIZE_Y][pos_x + j * BLOCK_SIZE_X + 1] != " ";
+                    collide |= screen[pos_y + i * BLOCK_SIZE_Y][pos_x + j * BLOCK_SIZE_X] != String::from(" ");
+                    collide |= screen[pos_y + i * BLOCK_SIZE_Y][pos_x + j * BLOCK_SIZE_X + 1] != String::from(" ");
 
                     if collide {
                         return true;
@@ -280,8 +280,8 @@ impl Tetromino {
 
     pub fn update_block(screen: &mut Screen, pos_x: usize, pos_y: usize, color: termion::color::Rgb, erase: bool) {
         if erase {
-            screen[pos_y][pos_x] = format!("{}{}", color::Fg(color), " "); 
-            screen[pos_y][pos_x + 1] = format!("{}{}", color::Fg(color), " ");
+            screen[pos_y][pos_x] = String::from(" "); 
+            screen[pos_y][pos_x + 1] = String::from(" ");
         } else {
             screen[pos_y][pos_x] = format!("{}{}", color::Fg(color), "█"); 
             screen[pos_y][pos_x + 1] = format!("{}{}", color::Fg(color), "█");
