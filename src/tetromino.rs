@@ -3,8 +3,8 @@ use crate::tetris::{ Screen, BLOCK_SIZE_X, BLOCK_SIZE_Y };
 use crate::rotation::Rotation;
 use termion::color;
 
+#[derive(Debug)]
 pub enum Tetromino {
-    NONE,
     I,
     J,
     L,
@@ -15,238 +15,256 @@ pub enum Tetromino {
 }
 
 impl Tetromino {
-    pub fn print(&self, screen: &mut Screen, pos_x: usize, pos_y: usize, rotation: Rotation) {
+    pub fn update(&self, screen: &mut Screen, pos_x: usize, pos_y: usize, rotation: Rotation, erase: bool) {
+        Self::update_block_vec(
+            screen, 
+            pos_x, 
+            pos_y, 
+            Self::get_color(self),
+            Self::get_pattern(self, rotation),
+            erase
+        );
+    }
+
+    pub fn get_pattern<'a>(&self, rotation: Rotation) -> Vec<Vec<&'a str>> {
         match self {
-            Tetromino::I => Self::print_i(screen, pos_x, pos_y, rotation),
-            Tetromino::J => Self::print_j(screen, pos_x, pos_y, rotation),
-            Tetromino::L => Self::print_l(screen, pos_x, pos_y, rotation),
-            Tetromino::O => Self::print_o(screen, pos_x, pos_y),
-            Tetromino::S => Self::print_s(screen, pos_x, pos_y, rotation),
-            Tetromino::T => Self::print_t(screen, pos_x, pos_y, rotation),
-            Tetromino::Z => Self::print_z(screen, pos_x, pos_y, rotation),
-            _ => (),
-            // Thing::B => self.print_J(),
+            Tetromino::I => return Self::pattern_i(rotation),
+            Tetromino::J => return Self::pattern_j(rotation),
+            Tetromino::L => return Self::pattern_l(rotation),
+            Tetromino::O => return Self::pattern_o(),
+            Tetromino::S => return Self::pattern_s(rotation),
+            Tetromino::T => return Self::pattern_t(rotation),
+            Tetromino::Z => return Self::pattern_z(rotation),
           }
     }
 
-    fn print_i(screen: &mut Screen, pos_x: usize, pos_y: usize, rotation: Rotation) {
-        let color = termion::color::Rgb(40, 211, 228);
+    pub fn get_color(&self) -> color::Rgb {
+        match self {
+            Tetromino::I => return color::Rgb(40, 211, 228),
+            Tetromino::J => return color::Rgb(22, 4, 230),
+            Tetromino::L => return color::Rgb(219, 105, 34),
+            Tetromino::O => return color::Rgb(240, 223, 40),
+            Tetromino::S => return color::Rgb(111, 255, 41),
+            Tetromino::T => return color::Rgb(184, 27, 238),
+            Tetromino::Z => return color::Rgb(222, 33, 61)
+          }
+    }
 
+    fn pattern_i<'a>(rotation: Rotation) -> Vec<Vec<&'a str>> {
         match rotation {
             Rotation::DEGREE_0 | 
             Rotation::DEGREE_180 => {
-                Self::print_block_vec(screen, pos_x, pos_y, color, 
+                return 
                     vec![
                         vec!["X"],
                         vec!["X"],
                         vec!["X"],
                         vec!["X"]
                     ]
-                );
+                ;
             }, 
             Rotation::DEGREE_90 |
             Rotation::DEGREE_270 => {
-                Self::print_block_vec(screen, pos_x, pos_y, color, 
+                return 
                     vec![
                         vec!["X", "X", "X", "X"]
                     ]
-                );
+                ;
             }
         }
     }
 
-    fn print_j(screen: &mut Screen, pos_x: usize, pos_y: usize, rotation: Rotation) {
-        let color = termion::color::Rgb(22, 4, 230);
+    fn pattern_j<'a>(rotation: Rotation) -> Vec<Vec<&'a str>> {
         match rotation {
             Rotation::DEGREE_0 => {
-                Self::print_block_vec(screen, pos_x, pos_y, color, 
+                return
                     vec![
                         vec![" ", "X"],
                         vec![" ", "X"],
                         vec!["X", "X"]
                     ]
-                );
+                ;
             },
             Rotation::DEGREE_90 => {
-                Self::print_block_vec(screen, pos_x, pos_y, color, 
+                return
                     vec![
                         vec!["X"],
                         vec!["X", "X", "X"]
                     ]
-                );            
+                ;
             }, 
             Rotation::DEGREE_180 => {
-                Self::print_block_vec(screen, pos_x, pos_y, color, 
+                return
                     vec![
                         vec!["X", "X"],
                         vec!["X"],
                         vec!["X"]
                     ]
-                );
+                ;
             },
             Rotation::DEGREE_270 => {
-                Self::print_block_vec(screen, pos_x, pos_y, color, 
+                return
                     vec![
                         vec!["X", "X", "X"],
                         vec![" ", " ", "X"]
                     ]
-                );
+                ;
             }
         }
     }
 
-    fn print_l(screen: &mut Screen, pos_x: usize, pos_y: usize, rotation: Rotation) {
-        let color = termion::color::Rgb(219, 105, 34);
+    fn pattern_l<'a>(rotation: Rotation) -> Vec<Vec<&'a str>> {
         match rotation {
             Rotation::DEGREE_0 => {
-                Self::print_block_vec(screen, pos_x, pos_y, color, 
+                return
                     vec![
                         vec!["X"],
                         vec!["X"],
                         vec!["X", "X"]
                     ]
-                );
+                ;
             }
             Rotation::DEGREE_90 => {
-                Self::print_block_vec(screen, pos_x, pos_y, color, 
+                return
                     vec![
                         vec!["X", "X", "X"],
                         vec!["X"],
                     ]
-                );
+                ;
             }, 
             Rotation::DEGREE_180 => {
-                Self::print_block_vec(screen, pos_x, pos_y, color, 
+                return
                     vec![
                         vec!["X", "X"],
                         vec![" ", "X"],
                         vec![" ", "X"]
                     ]
-                );
+                ;
             },
             Rotation::DEGREE_270 => {
-                Self::print_block_vec(screen, pos_x, pos_y, color, 
+                return
                     vec![
                         vec![" ", " ", "X"],
                         vec!["X", "X", "X"]
                     ]
-                );
+                ;
             }
         }
     }
 
-    fn print_o(screen: &mut Screen, pos_x: usize, pos_y: usize) {
-        let color = termion::color::Rgb(240, 223, 40);
-        Self::print_block_vec(screen, pos_x, pos_y, color, 
+    fn pattern_o<'a>() -> Vec<Vec<&'a str>> {
+        return
             vec![
                 vec!["X", "X"],
                 vec!["X", "X"]
             ]
-        );
+        ;
     }
 
-    fn print_s(screen: &mut Screen, pos_x: usize, pos_y: usize, rotation: Rotation) {
-        let color = termion::color::Rgb(111, 255, 41);
+    fn pattern_s<'a>(rotation: Rotation) -> Vec<Vec<&'a str>> {
         match rotation {
             Rotation::DEGREE_0 |
             Rotation::DEGREE_180 => {
-                Self::print_block_vec(screen, pos_x, pos_y, color, 
+                return
                     vec![
                         vec![" ", "X", "X"],
                         vec!["X", "X"]
                     ]
-                );
+                ;
             },
             Rotation::DEGREE_90 |
             Rotation::DEGREE_270 => {
-                Self::print_block_vec(screen, pos_x, pos_y, color, 
+                return
                     vec![
                         vec!["X", " "],
                         vec!["X", "X"],
                         vec![" ", "X"]
                     ]
-                );
+                ;
             }, 
         }
     }
 
-    fn print_t(screen: &mut Screen, pos_x: usize, pos_y: usize, rotation: Rotation) {
-        let color = termion::color::Rgb(184, 27, 238);
+    fn pattern_t<'a>(rotation: Rotation) -> Vec<Vec<&'a str>> {
         match rotation {
             Rotation::DEGREE_0 => {
-                Self::print_block_vec(screen, pos_x, pos_y, color, 
+                return
                     vec![
                         vec![" ", "X", " "],
                         vec!["X", "X", "X"]
                     ]
-                );
+                ;
             }
             Rotation::DEGREE_90 => {
-                Self::print_block_vec(screen, pos_x, pos_y, color, 
+                return
                     vec![
                         vec!["X"],
                         vec!["X", "X"],
                         vec!["X"]
                     ]
-                );
+                ;
             }, 
             Rotation::DEGREE_180 => {
-                Self::print_block_vec(screen, pos_x, pos_y, color, 
+                return
                     vec![
                         vec!["X", "X", "X"],
                         vec![" ", "X", " "]
                     ]
-                );
+                ;
             },
             Rotation::DEGREE_270 => {
-                Self::print_block_vec(screen, pos_x, pos_y, color, 
+                return
                     vec![
                         vec![" ", "X"],
                         vec!["X", "X"],
                         vec![" ", "X"]
                     ]
-                );
+                ;
             }
         }
     }
 
-    fn print_z(screen: &mut Screen, pos_x: usize, pos_y: usize, rotation: Rotation) {
-        let color = termion::color::Rgb(222, 33, 61);
+    fn pattern_z<'a>(rotation: Rotation) -> Vec<Vec<&'a str>> {
         match rotation {
             Rotation::DEGREE_0 |
             Rotation::DEGREE_180 => {
-                Self::print_block_vec(screen, pos_x, pos_y, color, 
+                return
                     vec![
                         vec!["X", "X"],
                         vec![" ", "X", "X"]
                     ]
-                );
+                ;
             }
             Rotation::DEGREE_90 |
             Rotation::DEGREE_270 => {
-                Self::print_block_vec(screen, pos_x, pos_y, color, 
+                return
                     vec![
                         vec![" ", "X"],
                         vec!["X", "X"],
                         vec!["X", " "]
                     ]
-                );
+                ;
             }, 
         }
     }
 
-    pub fn print_block_vec(screen: &mut Screen, pos_x: usize, pos_y: usize, color: termion::color::Rgb, blocks: Vec<Vec<&str>>) {
+    pub fn update_block_vec(screen: &mut Screen, pos_x: usize, pos_y: usize, color: termion::color::Rgb, blocks: Vec<Vec<&str>>, erase: bool) {
         for i in 0..blocks.len() {
             for j in 0..blocks[i].len() {
                 if blocks[i][j] == "X" {
-                    Self::print_block(screen, pos_x + j * BLOCK_SIZE_X, pos_y + i * BLOCK_SIZE_Y, color);
+                    Self::update_block(screen, pos_x + j * BLOCK_SIZE_X, pos_y + i * BLOCK_SIZE_Y, color, erase);
                 }
             }
         }
     }
 
-    pub fn print_block(screen: &mut Screen, pos_x: usize, pos_y: usize, color: termion::color::Rgb) {
-        screen[pos_y as usize][pos_x as usize] = format!("{}{}", color::Fg(color), "█"); 
-        screen[pos_y as usize][(pos_x + 1) as usize] = format!("{}{}", color::Fg(color), "█");
+    pub fn update_block(screen: &mut Screen, pos_x: usize, pos_y: usize, color: termion::color::Rgb, erase: bool) {
+        if erase {
+            screen[pos_y as usize][pos_x as usize] = format!("{}{}", color::Fg(color), " "); 
+            screen[pos_y as usize][(pos_x + 1) as usize] = format!("{}{}", color::Fg(color), " ");
+        } else {
+            screen[pos_y as usize][pos_x as usize] = format!("{}{}", color::Fg(color), "█"); 
+            screen[pos_y as usize][(pos_x + 1) as usize] = format!("{}{}", color::Fg(color), "█");
+        }        
     }
 }
