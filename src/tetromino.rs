@@ -1,6 +1,9 @@
+extern crate rand;
+
 use crate::tetris::{Screen, BLOCK_SIZE_X, BLOCK_SIZE_Y};
 use crate::rotation::Rotation;
 use termion::color;
+use rand::Rng;
 
 #[derive(Debug)]
 pub enum Tetromino {
@@ -14,6 +17,18 @@ pub enum Tetromino {
 }
 
 impl Tetromino {
+    pub fn random() -> Tetromino {
+        match rand::thread_rng().gen_range(0, 6) {
+            0 => return Self::I,
+            1 => return Self::J,
+            2 => return Self::L,
+            3 => return Self::O,
+            4 => return Self::S,
+            5 => return Self::T,
+            _ => return Self::Z,
+        }
+    }
+
     pub fn update(&self, screen: &mut Screen, pos_x: usize, pos_y: usize, rotation: Rotation, erase: bool) {
         Self::update_block_vec(
             screen, 

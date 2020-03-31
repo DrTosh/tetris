@@ -42,7 +42,7 @@ impl Tetris {
     pub fn new() -> Tetris {
         Tetris {
             game: vec![vec![String::from(" "); GAME_SIZE_X]; GAME_SIZE_Y],
-            current_tetromino: ActiveTetromino::new(BORDER_SIZE_X, BORDER_SIZE_Y)
+            current_tetromino: ActiveTetromino::new(BORDER_SIZE_X, BORDER_SIZE_Y, Tetromino::random()),
             // game: [""; GAME_SIZE_X]
         }
     }
@@ -54,6 +54,8 @@ impl Tetris {
 
         let mut time_at_last_frame = SystemTime::now();
         let mut speed_time = 1000;
+
+        self.update();
 
         loop {
             write!(stdout, "{}{}", termion::clear::All, termion::cursor::Hide).unwrap();
@@ -72,16 +74,19 @@ impl Tetris {
                 pos_y = (usize::from(terminal_height) - GAME_SIZE_Y) / 2;
             }
 
-            self.print_border();
-            self.print(pos_x, pos_y);
-
+            // update
             Self::log(format!("{:?}", self.current_tetromino));
             if time_at_last_frame.elapsed().unwrap().as_millis() > speed_time {
                 time_at_last_frame = SystemTime::now();
                 self.update();
                 Self::log(format!("{}", "updated"));
             }
-            
+
+            // print
+            self.print_border();
+            self.print(pos_x, pos_y);
+
+            // key listener
             let c = stdin.next();
             Self::log(format!("{:?}", c));
             match c {
@@ -99,7 +104,17 @@ impl Tetris {
     }
 
     fn update(&mut self) {
-        self.current_tetromino.move_down(&mut self.game);
+        if self.current_tetromino.finished {
+            self.current_tetromino = ActiveTetromino::new(BORDER_SIZE_X, BOARD_SIZE_Y, Tetromino::random());
+            self.current_tetromino.update(
+                &mut self.game, 
+                BORDER_SIZE_X,
+                BORDER_SIZE_Y,
+                Rotation::DEGREE_0
+            );
+        } else {
+            self.current_tetromino.move_down(&mut self.game);
+        }
     }
 
     fn print_border(&mut self) {

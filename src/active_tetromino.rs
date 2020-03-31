@@ -7,20 +7,22 @@ pub struct ActiveTetromino {
     pub tetromino: Tetromino,
     pub rotation: Rotation,
     pub pos_x: usize,
-    pub pos_y: usize
+    pub pos_y: usize,
+    pub finished: bool 
 }
 
 impl ActiveTetromino {
-    pub fn new(pos_x: usize, pos_y: usize) -> ActiveTetromino {
+    pub fn new(pos_x: usize, pos_y: usize, tetromino: Tetromino) -> ActiveTetromino {
         ActiveTetromino {
-            tetromino: Tetromino::L,
+            tetromino,
             rotation: Rotation::DEGREE_0,
             pos_x,
             pos_y,
+            finished: false
         }
     }
 
-    pub fn update(&mut self, screen: &mut Screen, pos_x: usize, pos_y: usize, rotation: Rotation) {
+    pub fn update(&mut self, screen: &mut Screen, pos_x: usize, pos_y: usize, rotation: Rotation) -> bool {
         self.tetromino.update(screen, self.pos_x, self.pos_y, self.rotation, true);
 
         if !self.tetromino.collide(screen, pos_x, pos_y, rotation) {
@@ -30,8 +32,10 @@ impl ActiveTetromino {
             self.rotation = rotation;
 
             self.tetromino.update(screen, pos_x, pos_y, rotation, false);
+            return true;
         } else {
             self.tetromino.update(screen, self.pos_x, self.pos_y, self.rotation, false);
+            return false;
         }
     }
         
@@ -44,10 +48,14 @@ impl ActiveTetromino {
     }
 
     pub fn move_left(&mut self, screen: &mut Screen) {
-        self.update(screen, self.pos_x - BLOCK_SIZE_X, self.pos_y, self.rotation);
+        if self.pos_x >= BLOCK_SIZE_X {
+            self.update(screen, self.pos_x - BLOCK_SIZE_X, self.pos_y, self.rotation);
+        }
     }
 
     pub fn move_down(&mut self, screen: &mut Screen) {
-        self.update(screen, self.pos_x, self.pos_y + BLOCK_SIZE_Y, self.rotation);
+        if !self.update(screen, self.pos_x, self.pos_y + BLOCK_SIZE_Y, self.rotation) {
+            self.finished = true;
+        } 
     }
 }
