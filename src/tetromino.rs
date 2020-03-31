@@ -1,4 +1,3 @@
-use crate::traits::{Printable};
 use crate::tetris::{ Screen, BLOCK_SIZE_X, BLOCK_SIZE_Y };
 use crate::rotation::Rotation;
 use termion::color;
@@ -24,6 +23,27 @@ impl Tetromino {
             Self::get_pattern(self, rotation),
             erase
         );
+    }
+
+    pub fn collide(&self, screen: &mut Screen, pos_x: usize, pos_y: usize, rotation: Rotation) -> bool {
+        let pattern = self.get_pattern(rotation);
+
+        for i in 0..pattern.len() {
+            for j in 0..pattern[i].len() {
+                if pattern[i][j] == "X" {
+                    let mut collide = false;
+
+                    collide |= screen[pos_y + i * BLOCK_SIZE_Y][pos_x + j * BLOCK_SIZE_X] != " ";
+                    collide |= screen[pos_y + i * BLOCK_SIZE_Y][pos_x + j * BLOCK_SIZE_X + 1] != " ";
+
+                    if collide {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
     }
 
     pub fn get_pattern<'a>(&self, rotation: Rotation) -> Vec<Vec<&'a str>> {
@@ -260,11 +280,11 @@ impl Tetromino {
 
     pub fn update_block(screen: &mut Screen, pos_x: usize, pos_y: usize, color: termion::color::Rgb, erase: bool) {
         if erase {
-            screen[pos_y as usize][pos_x as usize] = format!("{}{}", color::Fg(color), " "); 
-            screen[pos_y as usize][(pos_x + 1) as usize] = format!("{}{}", color::Fg(color), " ");
+            screen[pos_y][pos_x] = format!("{}{}", color::Fg(color), " "); 
+            screen[pos_y][pos_x + 1] = format!("{}{}", color::Fg(color), " ");
         } else {
-            screen[pos_y as usize][pos_x as usize] = format!("{}{}", color::Fg(color), "█"); 
-            screen[pos_y as usize][(pos_x + 1) as usize] = format!("{}{}", color::Fg(color), "█");
+            screen[pos_y][pos_x] = format!("{}{}", color::Fg(color), "█"); 
+            screen[pos_y][pos_x + 1] = format!("{}{}", color::Fg(color), "█");
         }        
     }
 }
