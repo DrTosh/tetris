@@ -3,7 +3,6 @@ mod tetromino;
 mod active_tetromino;
 mod rotation;
 mod traits;
-mod boxing_characters;
 use tetris::Tetris;
 
 fn main() {

@@ -14,15 +14,16 @@ pub const BLOCK_SIZE_X: usize = 2;
 pub const BLOCK_SIZE_Y: usize = 1;
 
 const BOARD_SIZE_X: usize = 10 * BLOCK_SIZE_X;
-const BOARD_SIZE_Y: usize = 20;
+const BOARD_SIZE_Y: usize = 20 * BLOCK_SIZE_Y;
 
 const HUD_SIZE_X: usize = 5;
 const HUD_SIZE_Y: usize = BOARD_SIZE_Y;
 
-const BORDER_SIZE: usize = 1;
+pub const BORDER_SIZE_X: usize = BLOCK_SIZE_X;
+pub const BORDER_SIZE_Y: usize = BLOCK_SIZE_Y;
 
-pub const GAME_SIZE_X: usize = BOARD_SIZE_X + HUD_SIZE_X + BORDER_SIZE * 3;
-pub const GAME_SIZE_Y: usize = BOARD_SIZE_Y + BORDER_SIZE * 2;
+pub const GAME_SIZE_X: usize = BOARD_SIZE_X + HUD_SIZE_X + BORDER_SIZE_X * 3;
+pub const GAME_SIZE_Y: usize = BOARD_SIZE_Y + BORDER_SIZE_Y * 2;
 
 pub const HEADER_SIZE_X: usize = BLOCK_SIZE_Y * 3;
 pub const HEADER_SIZE_Y: usize = BLOCK_SIZE_Y * 4;
@@ -41,7 +42,7 @@ impl Tetris {
     pub fn new() -> Tetris {
         Tetris {
             game: vec![vec![String::from(" "); GAME_SIZE_X]; GAME_SIZE_Y],
-            current_tetromino: ActiveTetromino::new(1, 1)
+            current_tetromino: ActiveTetromino::new(BORDER_SIZE_X, BORDER_SIZE_Y)
             // game: [""; GAME_SIZE_X]
         }
     }
@@ -72,58 +73,52 @@ impl Tetris {
             }
 
             self.print_border();
-            // current_tetromino.update();
             self.print(pos_x, pos_y);
 
+            Self::log(format!("{:?}", self.current_tetromino));
             if time_at_last_frame.elapsed().unwrap().as_millis() > speed_time {
                 time_at_last_frame = SystemTime::now();
                 self.update();
+                Self::log(format!("{}", "updated"));
             }
             
             let c = stdin.next();
-            write!(stdout, "\r{:?}", c).unwrap();
+            Self::log(format!("{:?}", c));
             match c {
-                Some(Ok(b'q')) => break,
-                Some(Ok(3)) => break,
+                Some(Ok(b'q')) | 
+                Some(Ok(3)) => break, // q or Ctrl + c for quit
+                Some(Ok(65)) => self.current_tetromino.rotate(&mut self.game), // arrow up
+                Some(Ok(66)) => self.current_tetromino.move_down(&mut self.game), // arrow down
+                Some(Ok(67)) => self.current_tetromino.move_right(&mut self.game), // arrow right
+                Some(Ok(68)) => self.current_tetromino.move_left(&mut self.game), // arrow left
                 _ => ()
             }
 
-            thread::sleep(Duration::from_millis(100));
+            thread::sleep(Duration::from_millis(10));
         }
     }
 
     fn update(&mut self) {
-        self.current_tetromino.update(
-            &mut self.game, 
-            self.current_tetromino.pos_x, 
-            self.current_tetromino.pos_y + 1, 
-            self.current_tetromino.rotation.next()
-        );
+        self.current_tetromino.move_down(&mut self.game);
     }
 
     fn print_border(&mut self) {
+        let color = color::Rgb(0, 255, 0);
         // vertical Border
-        for i in 1..GAME_SIZE_Y - 1 {
-            self.game[i][0] = String::from("│");
-            self.game[i][BOARD_SIZE_X] = String::from("│");
-            self.game[i][GAME_SIZE_X - 1] = String::from("│");
+        for i in 0..GAME_SIZE_Y {
+            self.game[i][0] = format!("{}{}", color::Fg(color), "█");
+            self.game[i][1] = format!("{}{}", color::Fg(color), "█");
+            self.game[i][BOARD_SIZE_X + BORDER_SIZE_X] = format!("{}{}", color::Fg(color), "█");
+            self.game[i][BOARD_SIZE_X + BORDER_SIZE_X + 1] = format!("{}{}", color::Fg(color), "█");
+            self.game[i][GAME_SIZE_X - BORDER_SIZE_X] = format!("{}{}", color::Fg(color), "█");
+            self.game[i][GAME_SIZE_X - BORDER_SIZE_X + 1] = format!("{}{}", color::Fg(color), "█");
         }
 
         // horizontal border
-        for i in 1..GAME_SIZE_X - 1 {
-            self.game[0][i] = String::from("─");
-            self.game[GAME_SIZE_Y - 1][i] = String::from("─");
+        for i in 0..GAME_SIZE_X {
+            self.game[0][i] = format!("{}{}", color::Fg(color), "█");
+            self.game[GAME_SIZE_Y - 1][i] = format!("{}{}", color::Fg(color), "█");
         }
-
-        // edges
-        self.game[0][0] = String::from("┌");
-        self.game[GAME_SIZE_Y - 1][0] = String::from("└");
-        self.game[0][GAME_SIZE_X - 1] = String::from("┐");
-        self.game[GAME_SIZE_Y - 1][GAME_SIZE_X - 1] = String::from("┘");
-
-        // board-hud seperator egdes
-        self.game[0][BOARD_SIZE_X] = String::from("┬");
-        self.game[GAME_SIZE_Y - 1][BOARD_SIZE_X] = String::from("┴");
     }
 
     fn print(&mut self, pos_x: usize, pos_y: usize) {

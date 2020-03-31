@@ -1,4 +1,4 @@
-use crate::tetris::{ Screen, BLOCK_SIZE_X, BLOCK_SIZE_Y };
+use crate::tetris::{Screen, BLOCK_SIZE_X, BLOCK_SIZE_Y};
 use crate::rotation::Rotation;
 use termion::color;
 
