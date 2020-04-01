@@ -4,11 +4,13 @@ use std::io::{Read, Write, stdout};
 use std::{thread};
 use termion::{async_stdin, color, clear, cursor};
 use std::time::{Duration, SystemTime};
+use std::fs::{File, OpenOptions};
 
 use crate::tetromino::Tetromino;
 use crate::active_tetromino::ActiveTetromino;
 use crate::traits::*;
 use crate::rotation::Rotation;
+
 
 pub const BLOCK_SIZE_X: usize = 2;
 pub const BLOCK_SIZE_Y: usize = 1;
@@ -25,8 +27,7 @@ pub const BORDER_SIZE_Y: usize = BLOCK_SIZE_Y;
 pub const GAME_SIZE_X: usize = BOARD_SIZE_X + HUD_SIZE_X + BORDER_SIZE_X * 3;
 pub const GAME_SIZE_Y: usize = BOARD_SIZE_Y + BORDER_SIZE_Y * 2;
 
-pub const HEADER_SIZE_X: usize = BLOCK_SIZE_Y * 3;
-pub const HEADER_SIZE_Y: usize = BLOCK_SIZE_Y * 4;
+const level_timer: u128 = 10000;
 
 // pub type Screen<'a> = [[&'a str; GAME_SIZE_X]; GAME_SIZE_Y];
 pub type Screen = Vec<Vec<String>>;
@@ -42,17 +43,19 @@ impl Tetris {
     pub fn new() -> Tetris {
         Tetris {
             game: vec![vec![String::from(" "); GAME_SIZE_X]; GAME_SIZE_Y],
-            current_tetromino: ActiveTetromino::new(BORDER_SIZE_X, BORDER_SIZE_Y, Tetromino::random()),
+            current_tetromino: ActiveTetromino::new(),
             // game: [""; GAME_SIZE_X]
         }
     }
 
     pub fn play(&mut self) {
         let mut stdout = AlternateScreen::from(stdout().into_raw_mode().unwrap());
-        //let mut stdout = stdout().into_raw_mode().unwrap();
+        // let mut stdout = stdout().into_raw_mode().unwrap();
         let mut stdin = async_stdin().bytes();
 
         let mut time_at_last_frame = SystemTime::now();
+
+        let mut current_level_timer = 0;
         let mut speed_time = 1000;
 
         self.update();
@@ -75,11 +78,12 @@ impl Tetris {
             }
 
             // update
-            Self::log(format!("{:?}", self.current_tetromino));
+            // Self::log(format!("{:?}", self.current_tetromino));
             if time_at_last_frame.elapsed().unwrap().as_millis() > speed_time {
                 time_at_last_frame = SystemTime::now();
-                self.update();
-                Self::log(format!("{}", "updated"));
+                if !self.update() {
+                    break;
+                }
             }
 
             // print
@@ -88,7 +92,6 @@ impl Tetris {
 
             // key listener
             let c = stdin.next();
-            Self::log(format!("{:?}", c));
             match c {
                 Some(Ok(b'q')) | 
                 Some(Ok(3)) => break, // q or Ctrl + c for quit
@@ -101,20 +104,37 @@ impl Tetris {
 
             thread::sleep(Duration::from_millis(10));
         }
+
+        self.game_over();
     }
 
-    fn update(&mut self) {
+    fn update(&mut self) -> bool {
         if self.current_tetromino.finished {
-            self.current_tetromino = ActiveTetromino::new(BORDER_SIZE_X, BOARD_SIZE_Y, Tetromino::random());
-            self.current_tetromino.update(
-                &mut self.game, 
-                BORDER_SIZE_X,
-                BORDER_SIZE_Y,
-                Rotation::DEGREE_0
-            );
+            crate::Tetris::log(format!("pos_x: {}, pos_y: {}", BORDER_SIZE_X, BORDER_SIZE_Y));
+            self.current_tetromino = ActiveTetromino::new();
+            if !self.current_tetromino.init(&mut self.game) {
+                return false; // game over
+            }
+            Self::log(format!("{:?}", self.current_tetromino));
         } else {
             self.current_tetromino.move_down(&mut self.game);
         }
+
+        return true;
+    }
+
+    fn game_over(&mut self) {
+        let mut stdout = stdout().into_raw_mode().unwrap();
+        let (terminal_width, terminal_height) = termion::terminal_size().unwrap();
+
+        write!(stdout, "{}{}{}", 
+            cursor::Goto((terminal_width - 10) / 2, terminal_height / 2),
+            termion::style::Reset,
+            "game over!"
+        ).unwrap();
+
+        stdout.flush().unwrap();
+        thread::sleep(Duration::from_millis(2000));
     }
 
     fn print_border(&mut self) {
@@ -150,15 +170,15 @@ impl Tetris {
     }
     
     pub fn log(message: String) {
-        let mut stdout = stdout().into_raw_mode().unwrap();
-        
-        write!(stdout, "{}{}{}", 
-            cursor::Goto(1, GAME_SIZE_Y as u16 + 1),
-            clear::CurrentLine,
-            message
-        ).unwrap();
-        
-        stdout.flush().unwrap();
+        let mut file = OpenOptions::new()
+                        .write(true)
+                        .create(true)
+                        .append(true)
+                        .open("debug.log")
+                        .unwrap();
+
+        file.write(message.as_bytes()).unwrap();        
+        file.write(b"\n").unwrap();        
     }
 }
 
