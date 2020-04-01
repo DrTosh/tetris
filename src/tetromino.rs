@@ -70,7 +70,7 @@ impl Tetromino {
             Tetromino::S => return Self::pattern_s(rotation),
             Tetromino::T => return Self::pattern_t(rotation),
             Tetromino::Z => return Self::pattern_z(rotation),
-          }
+        }
     }
 
     pub fn get_color(&self) -> color::Rgb {
@@ -82,7 +82,7 @@ impl Tetromino {
             Tetromino::S => return color::Rgb(111, 255, 41),
             Tetromino::T => return color::Rgb(184, 27, 238),
             Tetromino::Z => return color::Rgb(222, 33, 61)
-          }
+        }
     }
 
     fn pattern_i<'a>(rotation: Rotation) -> Vec<Vec<&'a str>> {

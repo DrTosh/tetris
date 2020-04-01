@@ -1,5 +1,5 @@
 use crate::tetromino::Tetromino;
-use crate::tetris::{Screen, BLOCK_SIZE_X, BLOCK_SIZE_Y};
+use crate::tetris::{Screen, GAME_SIZE_Y, BLOCK_SIZE_X, BLOCK_SIZE_Y, BORDER_SIZE_X, BORDER_SIZE_Y};
 use crate::rotation::Rotation;
 
 #[derive(Debug)]
@@ -12,21 +12,29 @@ pub struct ActiveTetromino {
 }
 
 impl ActiveTetromino {
-    pub fn new(pos_x: usize, pos_y: usize, tetromino: Tetromino) -> ActiveTetromino {
+    pub fn new() -> ActiveTetromino {
         ActiveTetromino {
-            tetromino,
+            tetromino: Tetromino::random(),
             rotation: Rotation::DEGREE_0,
-            pos_x,
-            pos_y,
+            pos_x: BORDER_SIZE_X + BLOCK_SIZE_X * 4,
+            pos_y: BORDER_SIZE_Y,
             finished: false
         }
+    }
+
+    pub fn init(&mut self, screen: &mut Screen) -> bool {
+        if !self.tetromino.collide(screen, self.pos_x, self.pos_y, self.rotation) {
+            self.tetromino.update(screen, self.pos_x, self.pos_y, self.rotation, false);
+            return true;
+        } else {
+            return false;
+        }        
     }
 
     pub fn update(&mut self, screen: &mut Screen, pos_x: usize, pos_y: usize, rotation: Rotation) -> bool {
         self.tetromino.update(screen, self.pos_x, self.pos_y, self.rotation, true);
 
         if !self.tetromino.collide(screen, pos_x, pos_y, rotation) {
-
             self.pos_x = pos_x;
             self.pos_y = pos_y;
             self.rotation = rotation;
