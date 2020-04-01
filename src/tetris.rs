@@ -25,6 +25,7 @@ pub type Screen = Vec<Vec<String>>;
 pub struct Tetris { 
     game: Screen,
     current_tetromino: ActiveTetromino,
+    changed: bool
 }
 
 impl Tetris {
@@ -32,6 +33,7 @@ impl Tetris {
         Tetris {
             game: vec![vec![String::from(" "); GAME_SIZE_X]; GAME_SIZE_Y],
             current_tetromino: ActiveTetromino::new(),
+            changed: true
         }
     }
 
@@ -45,9 +47,6 @@ impl Tetris {
         self.update();
 
         loop {
-            write!(stdout, "{}{}", clear::All, termion::cursor::Hide).unwrap();
-            stdout.flush().unwrap();
-
             let (terminal_width, terminal_height) = termion::terminal_size().unwrap();
             
             let mut pos_x = 1;
@@ -70,18 +69,22 @@ impl Tetris {
             }
 
             // print
-            self.print_border();
-            self.print(pos_x, pos_y);
+            if self.changed {
+                write!(stdout, "{}{}", clear::All, termion::cursor::Hide).unwrap();
+                self.print_border();
+                self.print(pos_x, pos_y);
+                self.changed = false;
+            }            
 
             // key listener
             let c = stdin.next();
             match c {
                 Some(Ok(b'q')) | 
                 Some(Ok(3)) => break, // q or Ctrl + c for quit
-                Some(Ok(65)) => self.current_tetromino.rotate(&mut self.game), // arrow up
-                Some(Ok(66)) => self.current_tetromino.move_down(&mut self.game), // arrow down
-                Some(Ok(67)) => self.current_tetromino.move_right(&mut self.game), // arrow right
-                Some(Ok(68)) => self.current_tetromino.move_left(&mut self.game), // arrow left
+                Some(Ok(65)) => { self.current_tetromino.rotate(&mut self.game); self.changed = true }, // arrow up
+                Some(Ok(66)) => { self.current_tetromino.move_down(&mut self.game); self.changed = true }, // arrow down
+                Some(Ok(67)) => { self.current_tetromino.move_right(&mut self.game); self.changed = true }, // arrow right
+                Some(Ok(68)) => { self.current_tetromino.move_left(&mut self.game); self.changed = true }, // arrow left
                 _ => ()
             }
 
@@ -93,7 +96,6 @@ impl Tetris {
 
     fn update(&mut self) -> bool {
         if self.current_tetromino.finished {
-
             self.update_rows();
 
             self.current_tetromino = ActiveTetromino::new();
@@ -103,6 +105,7 @@ impl Tetris {
             Self::log(format!("{:?}", self.current_tetromino));
         } else {
             self.current_tetromino.move_down(&mut self.game);
+            self.changed = true;
         }
 
         return true;
