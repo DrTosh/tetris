@@ -1,5 +1,5 @@
 use crate::tetromino::Tetromino;
-use crate::tetris::{Screen, GAME_SIZE_Y, BLOCK_SIZE_X, BLOCK_SIZE_Y, BORDER_SIZE_X, BORDER_SIZE_Y};
+use crate::tetris::{Screen, BLOCK_SIZE_X, BLOCK_SIZE_Y, BORDER_SIZE_X, BORDER_SIZE_Y};
 use crate::rotation::Rotation;
 
 #[derive(Debug)]
@@ -15,7 +15,7 @@ impl ActiveTetromino {
     pub fn new() -> ActiveTetromino {
         ActiveTetromino {
             tetromino: Tetromino::random(),
-            rotation: Rotation::DEGREE_0,
+            rotation: Rotation::Degree90,
             pos_x: BORDER_SIZE_X + BLOCK_SIZE_X * 4,
             pos_y: BORDER_SIZE_Y,
             finished: false

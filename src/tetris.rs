@@ -2,15 +2,11 @@ use termion::raw::IntoRawMode;
 use termion::screen::AlternateScreen;
 use std::io::{Read, Write, stdout};
 use std::{thread};
-use termion::{async_stdin, color, clear, cursor};
+use termion::{async_stdin, color, clear, cursor, style};
 use std::time::{Duration, SystemTime};
-use std::fs::{File, OpenOptions};
+use std::fs::{OpenOptions};
 
-use crate::tetromino::Tetromino;
 use crate::active_tetromino::ActiveTetromino;
-use crate::traits::*;
-use crate::rotation::Rotation;
-
 
 pub const BLOCK_SIZE_X: usize = 2;
 pub const BLOCK_SIZE_Y: usize = 1;
@@ -18,25 +14,17 @@ pub const BLOCK_SIZE_Y: usize = 1;
 const BOARD_SIZE_X: usize = 10 * BLOCK_SIZE_X;
 const BOARD_SIZE_Y: usize = 20 * BLOCK_SIZE_Y;
 
-const HUD_SIZE_X: usize = 5;
-const HUD_SIZE_Y: usize = BOARD_SIZE_Y;
-
 pub const BORDER_SIZE_X: usize = BLOCK_SIZE_X;
 pub const BORDER_SIZE_Y: usize = BLOCK_SIZE_Y;
 
-pub const GAME_SIZE_X: usize = BOARD_SIZE_X + HUD_SIZE_X + BORDER_SIZE_X * 3;
+pub const GAME_SIZE_X: usize = BOARD_SIZE_X + BORDER_SIZE_X * 3;
 pub const GAME_SIZE_Y: usize = BOARD_SIZE_Y + BORDER_SIZE_Y * 2;
 
-const level_timer: u128 = 10000;
-
-// pub type Screen<'a> = [[&'a str; GAME_SIZE_X]; GAME_SIZE_Y];
 pub type Screen = Vec<Vec<String>>;
 
 pub struct Tetris { 
     game: Screen,
     current_tetromino: ActiveTetromino,
-    // board:[[Tetromino;BOARD_SIZE_X];BOARD_SIZE_Y],
-    // score: u16,
 }
 
 impl Tetris {
@@ -44,24 +32,20 @@ impl Tetris {
         Tetris {
             game: vec![vec![String::from(" "); GAME_SIZE_X]; GAME_SIZE_Y],
             current_tetromino: ActiveTetromino::new(),
-            // game: [""; GAME_SIZE_X]
         }
     }
 
     pub fn play(&mut self) {
         let mut stdout = AlternateScreen::from(stdout().into_raw_mode().unwrap());
         // let mut stdout = stdout().into_raw_mode().unwrap();
+        
         let mut stdin = async_stdin().bytes();
-
         let mut time_at_last_frame = SystemTime::now();
-
-        let mut current_level_timer = 0;
-        let mut speed_time = 1000;
 
         self.update();
 
         loop {
-            write!(stdout, "{}{}", termion::clear::All, termion::cursor::Hide).unwrap();
+            write!(stdout, "{}{}", clear::All, termion::cursor::Hide).unwrap();
             stdout.flush().unwrap();
 
             let (terminal_width, terminal_height) = termion::terminal_size().unwrap();
@@ -78,8 +62,7 @@ impl Tetris {
             }
 
             // update
-            // Self::log(format!("{:?}", self.current_tetromino));
-            if time_at_last_frame.elapsed().unwrap().as_millis() > speed_time {
+            if time_at_last_frame.elapsed().unwrap().as_millis() > 500 {
                 time_at_last_frame = SystemTime::now();
                 if !self.update() {
                     break;
@@ -110,7 +93,9 @@ impl Tetris {
 
     fn update(&mut self) -> bool {
         if self.current_tetromino.finished {
-            crate::Tetris::log(format!("pos_x: {}, pos_y: {}", BORDER_SIZE_X, BORDER_SIZE_Y));
+
+            self.update_rows();
+
             self.current_tetromino = ActiveTetromino::new();
             if !self.current_tetromino.init(&mut self.game) {
                 return false; // game over
@@ -123,13 +108,37 @@ impl Tetris {
         return true;
     }
 
+    fn update_rows(&mut self) {
+        let mut completed_rows: Vec<usize> = vec![];
+
+        for i in BORDER_SIZE_Y..GAME_SIZE_Y - BORDER_SIZE_Y {
+            let mut complete_row = true;
+            for j in BORDER_SIZE_X..BOARD_SIZE_X {
+                if self.game[i][j] == String::from(" ") {
+                    complete_row = false;
+                    break;
+                }
+            }
+            
+            if complete_row {
+                completed_rows.push(i);
+            }
+        }
+
+        for i in 0..completed_rows.len() {
+            self.game.remove(completed_rows[i]);
+            self.game.insert(1, vec![String::from(" "); GAME_SIZE_X]);
+        }
+    }
+
     fn game_over(&mut self) {
         let mut stdout = stdout().into_raw_mode().unwrap();
         let (terminal_width, terminal_height) = termion::terminal_size().unwrap();
 
-        write!(stdout, "{}{}{}", 
+        write!(stdout, "{}{}{}{}", 
+            clear::All,
             cursor::Goto((terminal_width - 10) / 2, terminal_height / 2),
-            termion::style::Reset,
+            style::Reset,
             "game over!"
         ).unwrap();
 
@@ -138,13 +147,12 @@ impl Tetris {
     }
 
     fn print_border(&mut self) {
-        let color = color::Rgb(0, 255, 0);
+        let color = color::Rgb(0, 102, 102);
+
         // vertical Border
         for i in 0..GAME_SIZE_Y {
             self.game[i][0] = format!("{}{}", color::Fg(color), "█");
             self.game[i][1] = format!("{}{}", color::Fg(color), "█");
-            self.game[i][BOARD_SIZE_X + BORDER_SIZE_X] = format!("{}{}", color::Fg(color), "█");
-            self.game[i][BOARD_SIZE_X + BORDER_SIZE_X + 1] = format!("{}{}", color::Fg(color), "█");
             self.game[i][GAME_SIZE_X - BORDER_SIZE_X] = format!("{}{}", color::Fg(color), "█");
             self.game[i][GAME_SIZE_X - BORDER_SIZE_X + 1] = format!("{}{}", color::Fg(color), "█");
         }

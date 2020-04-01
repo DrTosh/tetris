@@ -18,7 +18,7 @@ pub enum Tetromino {
 
 impl Tetromino {
     pub fn random() -> Tetromino {
-        match rand::thread_rng().gen_range(0, 6) {
+        match rand::thread_rng().gen_range(0, 7) {
             0 => return Self::I,
             1 => return Self::J,
             2 => return Self::L,
@@ -75,20 +75,20 @@ impl Tetromino {
 
     pub fn get_color(&self) -> color::Rgb {
         match self {
-            Tetromino::I => return color::Rgb(40, 211, 228),
-            Tetromino::J => return color::Rgb(22, 4, 230),
-            Tetromino::L => return color::Rgb(219, 105, 34),
-            Tetromino::O => return color::Rgb(240, 223, 40),
-            Tetromino::S => return color::Rgb(111, 255, 41),
+            Tetromino::I => return color::Rgb(102, 255, 255),
+            Tetromino::J => return color::Rgb(0, 153, 255),
+            Tetromino::L => return color::Rgb(255, 153, 51),
+            Tetromino::O => return color::Rgb(255, 255, 102),
+            Tetromino::S => return color::Rgb(102, 255, 102),
             Tetromino::T => return color::Rgb(184, 27, 238),
-            Tetromino::Z => return color::Rgb(222, 33, 61)
+            Tetromino::Z => return color::Rgb(204, 51, 153)
         }
     }
 
     fn pattern_i<'a>(rotation: Rotation) -> Vec<Vec<&'a str>> {
         match rotation {
-            Rotation::DEGREE_0 | 
-            Rotation::DEGREE_180 => {
+            Rotation::Degree0 | 
+            Rotation::Degree180 => {
                 return 
                     vec![
                         vec!["X"],
@@ -98,8 +98,8 @@ impl Tetromino {
                     ]
                 ;
             }, 
-            Rotation::DEGREE_90 |
-            Rotation::DEGREE_270 => {
+            Rotation::Degree90 |
+            Rotation::Degree270 => {
                 return 
                     vec![
                         vec!["X", "X", "X", "X"]
@@ -111,7 +111,7 @@ impl Tetromino {
 
     fn pattern_j<'a>(rotation: Rotation) -> Vec<Vec<&'a str>> {
         match rotation {
-            Rotation::DEGREE_0 => {
+            Rotation::Degree0 => {
                 return
                     vec![
                         vec![" ", "X"],
@@ -120,7 +120,7 @@ impl Tetromino {
                     ]
                 ;
             },
-            Rotation::DEGREE_90 => {
+            Rotation::Degree90 => {
                 return
                     vec![
                         vec!["X"],
@@ -128,7 +128,7 @@ impl Tetromino {
                     ]
                 ;
             }, 
-            Rotation::DEGREE_180 => {
+            Rotation::Degree180 => {
                 return
                     vec![
                         vec!["X", "X"],
@@ -137,7 +137,7 @@ impl Tetromino {
                     ]
                 ;
             },
-            Rotation::DEGREE_270 => {
+            Rotation::Degree270 => {
                 return
                     vec![
                         vec!["X", "X", "X"],
@@ -150,7 +150,7 @@ impl Tetromino {
 
     fn pattern_l<'a>(rotation: Rotation) -> Vec<Vec<&'a str>> {
         match rotation {
-            Rotation::DEGREE_0 => {
+            Rotation::Degree0 => {
                 return
                     vec![
                         vec!["X"],
@@ -159,7 +159,7 @@ impl Tetromino {
                     ]
                 ;
             }
-            Rotation::DEGREE_90 => {
+            Rotation::Degree90 => {
                 return
                     vec![
                         vec!["X", "X", "X"],
@@ -167,7 +167,7 @@ impl Tetromino {
                     ]
                 ;
             }, 
-            Rotation::DEGREE_180 => {
+            Rotation::Degree180 => {
                 return
                     vec![
                         vec!["X", "X"],
@@ -176,7 +176,7 @@ impl Tetromino {
                     ]
                 ;
             },
-            Rotation::DEGREE_270 => {
+            Rotation::Degree270 => {
                 return
                     vec![
                         vec![" ", " ", "X"],
@@ -198,8 +198,8 @@ impl Tetromino {
 
     fn pattern_s<'a>(rotation: Rotation) -> Vec<Vec<&'a str>> {
         match rotation {
-            Rotation::DEGREE_0 |
-            Rotation::DEGREE_180 => {
+            Rotation::Degree0 |
+            Rotation::Degree180 => {
                 return
                     vec![
                         vec![" ", "X", "X"],
@@ -207,8 +207,8 @@ impl Tetromino {
                     ]
                 ;
             },
-            Rotation::DEGREE_90 |
-            Rotation::DEGREE_270 => {
+            Rotation::Degree90 |
+            Rotation::Degree270 => {
                 return
                     vec![
                         vec!["X", " "],
@@ -222,7 +222,7 @@ impl Tetromino {
 
     fn pattern_t<'a>(rotation: Rotation) -> Vec<Vec<&'a str>> {
         match rotation {
-            Rotation::DEGREE_0 => {
+            Rotation::Degree0 => {
                 return
                     vec![
                         vec![" ", "X", " "],
@@ -230,7 +230,7 @@ impl Tetromino {
                     ]
                 ;
             }
-            Rotation::DEGREE_90 => {
+            Rotation::Degree90 => {
                 return
                     vec![
                         vec!["X"],
@@ -239,7 +239,7 @@ impl Tetromino {
                     ]
                 ;
             }, 
-            Rotation::DEGREE_180 => {
+            Rotation::Degree180 => {
                 return
                     vec![
                         vec!["X", "X", "X"],
@@ -247,7 +247,7 @@ impl Tetromino {
                     ]
                 ;
             },
-            Rotation::DEGREE_270 => {
+            Rotation::Degree270 => {
                 return
                     vec![
                         vec![" ", "X"],
@@ -261,8 +261,8 @@ impl Tetromino {
 
     fn pattern_z<'a>(rotation: Rotation) -> Vec<Vec<&'a str>> {
         match rotation {
-            Rotation::DEGREE_0 |
-            Rotation::DEGREE_180 => {
+            Rotation::Degree0 |
+            Rotation::Degree180 => {
                 return
                     vec![
                         vec!["X", "X"],
@@ -270,8 +270,8 @@ impl Tetromino {
                     ]
                 ;
             }
-            Rotation::DEGREE_90 |
-            Rotation::DEGREE_270 => {
+            Rotation::Degree90 |
+            Rotation::Degree270 => {
                 return
                     vec![
                         vec![" ", "X"],
